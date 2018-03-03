@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Reflex!</string>
+    <string name="currentScore">Score: %d </string>
+    <string name="currentLevel">Level: %d </string>
+    <string name="highScore">High Score: %d </string>
+    <string name="lives">Lives:</string>
+</resources>
