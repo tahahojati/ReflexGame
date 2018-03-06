@@ -11,7 +11,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-public class GameActivity extends AppCompatActivity {
+public class GameActivity extends AppCompatActivity implements Game.AssetFactory {
     private AppCompatImageButton mSettingsImageButton;
     private TextView mScoreTextView, mHighScoreTextView;
     private LinearLayout mLivesLayout;
@@ -22,13 +22,17 @@ public class GameActivity extends AppCompatActivity {
     //End of view element declerations
 
     private SharedPreferences mPreferences; //we'll save a reference to default sharedpreferences.
-    private int mScore;
     private SoundPool mSoundPool;
-
+    private Game mGame;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
+    }
+
+    @Override
+    public Drawable createAssetDrawable(String asset_id) {
+        return null;
     }
 }
