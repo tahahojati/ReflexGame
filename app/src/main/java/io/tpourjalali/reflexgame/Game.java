@@ -1,6 +1,6 @@
 package io.tpourjalali.reflexgame;
 
-import android.graphics.drawable.Drawable;
+import android.view.View;
 
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
@@ -23,11 +23,6 @@ public class Game {
         mAssetFactory = assetFactory;
     }
 
-    public void setRunner(Runner runner) {
-        mRunner = runner;
-        mRunner.setGame(this);
-    }
-
     public void start() throws IllegalStateException {
         if (mState == State.RUNNING) return;
         if (Objects.isNull(mRunner))
@@ -38,21 +33,73 @@ public class Game {
         }
     }
 
+    public void addAsset(GameAsset asset) {
+        mAssets.add(asset);
+    }
+
+    public int getScore() {
+        return mScore;
+    }
+
+    public void setScore(int score) {
+        mScore = score;
+    }
+
+    public int getLevel() {
+        return mLevel;
+    }
+
+    public void setLevel(int level) {
+        mLevel = level;
+    }
+
+    public int getLives() {
+        return mLives;
+    }
+
+    public void setLives(int lives) {
+        mLives = lives;
+    }
+
+    public ConcurrentLinkedDeque<GameAsset> getAssets() {
+        return mAssets;
+    }
+
+    public Runner getRunner() {
+        return mRunner;
+    }
+
+    public void setRunner(Runner runner) {
+        mRunner = runner;
+        mRunner.setGame(this);
+    }
+
+    public AssetFactory getAssetFactory() {
+        return mAssetFactory;
+    }
+
+    public State getState() {
+        return mState;
+    }
+
+    public void setState(State state) {
+        mState = state;
+    }
+
     public enum State {
         RUNNING, PAUSED, NOTSTARTED, FINISHED
     }
 
-    public interface GameAsset {
-        public void draw();
-    }
-
     public interface AssetFactory {
-        public Drawable createAssetDrawable(String asset_id);
+        public View createAssetDrawable(String asset_id);
     }
 
     public interface Runner {
         void setGame(Game game);
 
+        void pause();
+
+        void end();
         void resume();
     }
 }

@@ -7,11 +7,13 @@ import android.os.Bundle;
 import android.support.annotation.StyleRes;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageButton;
+import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class GameActivity extends AppCompatActivity implements Game.AssetFactory {
+    public static final String ASSET_SPOT = "SPOT";
     private AppCompatImageButton mSettingsImageButton;
     private TextView mScoreTextView, mHighScoreTextView;
     private LinearLayout mLivesLayout;
@@ -32,7 +34,7 @@ public class GameActivity extends AppCompatActivity implements Game.AssetFactory
     }
 
     @Override
-    public Drawable createAssetDrawable(String asset_id) {
+    public View createAssetDrawable(String asset_id) {
         return null;
     }
 }
