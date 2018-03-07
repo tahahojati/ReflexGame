@@ -1,5 +1,6 @@
 package io.tpourjalali.reflexgame;
 
+import android.animation.Animator;
 import android.view.View;
 
 import java.util.Objects;
@@ -13,17 +14,20 @@ public class Game {
     private int mScore, mLevel, mLives;
     private ConcurrentLinkedDeque<GameAsset> mAssets;
     private Runner mRunner;
-    private AssetFactory mAssetFactory;
+    private GameView mGameView;
     private State mState;
 
-    public Game(AssetFactory assetFactory, int lives) {
+    public Game(GameView gameView, int lives) {
         mScore = mLevel = 0;
+        mAssets = new ConcurrentLinkedDeque<>();
         ++mLevel;
         mLives = lives;
-        mAssetFactory = assetFactory;
+        mGameView = gameView;
+        mState = State.NOTSTARTED;
     }
 
     public void start() throws IllegalStateException {
+
         if (mState == State.RUNNING) return;
         if (Objects.isNull(mRunner))
             throw new IllegalStateException("No runner specified");
@@ -74,8 +78,8 @@ public class Game {
         mRunner.setGame(this);
     }
 
-    public AssetFactory getAssetFactory() {
-        return mAssetFactory;
+    public GameView getGameView() {
+        return mGameView;
     }
 
     public State getState() {
@@ -90,8 +94,20 @@ public class Game {
         RUNNING, PAUSED, NOTSTARTED, FINISHED
     }
 
-    public interface AssetFactory {
-        public View createAssetDrawable(String asset_id);
+    public interface GameView {
+        View createAssetView(String asset_id);
+
+        void addView(View v, int x, int y, int width, int height);
+
+        void runAnimator(Animator animator);
+
+        void setLives(int lives);
+
+        void setScore(int score);
+
+        void setHighScore(int highScore);
+
+        void clearViewPort();
     }
 
     public interface Runner {

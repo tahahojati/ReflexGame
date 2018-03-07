@@ -5,6 +5,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import android.support.constraint.ConstraintLayout;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -51,8 +53,10 @@ public class GameRunner implements Game.Runner {
     @Override
     public void resume() {
         //do the setup, start all animators.
-        mSingleTreadExecutor.submit(new SetUpLogic());
-        mRunningLogicTask = mSingleTreadExecutor.submit(new RunningLogic());
+        //mSingleTreadExecutor.submit(new SetUpLogic());
+        Log.d("GameRunner", "Inside resume");
+//        mRunningLogicTask = mSingleTreadExecutor.submit(new RunningLogic());
+        new RunningLogic().run();
     }
 
     @Override
@@ -62,7 +66,7 @@ public class GameRunner implements Game.Runner {
 
     @Override
     public void end() {
-        //clear everything and be ready for a new game. 
+        //clear everything and be ready for a new game.
     }
 
 
@@ -79,23 +83,30 @@ public class GameRunner implements Game.Runner {
         @Override
         public void run() {
             while (!Thread.interrupted()) {
+                Log.d("RunningLogic", "just thinking");
                 GameAsset asset = generateAsset();
-                ViewGroup.LayoutParams lp = new ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams lp = new ConstraintLayout.LayoutParams(
+//                        ViewGroup.LayoutParams.WRAP_CONTENT,
+//                        ViewGroup.LayoutParams.WRAP_CONTENT
+                        100, 100
                 );
+                asset.getView().setX(250);
+                asset.getView().setY(250);
                 mViewGroup.addView(asset.getView(), lp);
                 Bundle b = new Bundle();
                 b.putSerializable(MESSAGE_DATA_ASSET, asset);
                 //have the activity animate the asset.
-                Message m = mHandler.obtainMessage();
-                m.setData(b);
-                m.sendToTarget();
-                try {
-                    this.wait(calclateWait());
-                } catch (InterruptedException e) {
-                    return;
-                }
+//                Message m = mHandler.obtainMessage();
+//                m.setData(b);
+//                m.sendToTarget();
+//                synchronized (this) {
+//                    try {
+//                        this.wait(calclateWait());
+//                    } catch (InterruptedException e) {
+//                        return;
+//                    }
+//                }
+                break;
             }
         }
 
@@ -105,7 +116,7 @@ public class GameRunner implements Game.Runner {
         }
 
         private GameAsset generateAsset() {
-            View assetView = mGame.getAssetFactory().createAssetDrawable(GameActivity.ASSET_SPOT);
+            View assetView = mGame.getGameView().createAssetView(GameActivity.ASSET_SPOT);
             GameAsset asset = new GameAsset(assetView, null);
             mGame.addAsset(asset);
             return asset;
