@@ -5,19 +5,18 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by ProfessorTaha on 3/6/2018.
  */
 
-public class GameRunner implements Game.Runner, Runnable {
+public class GameRunner implements Game.Runner, Runnable, View.OnClickListener {
     public static final String TAG = "GameRunner";
     public static final String MESSAGE_DATA_ASSET = "asset";
     private final Game.GameView mGameView;
@@ -30,6 +29,7 @@ public class GameRunner implements Game.Runner, Runnable {
             asset.getAnimator().start();
         }
     };
+    AtomicInteger mCurrentViewTag = new AtomicInteger(0);
     private int mHighScore = 0;
     private SingleTaskThread mThread;
     private Game mGame;
@@ -105,17 +105,30 @@ public class GameRunner implements Game.Runner, Runnable {
 //        while (!Thread.interrupted()) //TODO: uncomment this!
         {
             View assetView = mGameView.createAssetView("spot");
-            assetView.setY(random.nextInt(viewportMaxY - 70) + 35);
-            assetView.setX(random.nextInt(viewportMaxX - 80) + 40);
             GameAsset asset = new GameAsset(assetView, null);
+            assetView.setTag(asset); // we tag the view with the asset so we can find the asset when view is clicked.
+            assetView.setOnClickListener(this);
+            int y = (random.nextInt(viewportMaxY - 70) + 35);
+            int x = (random.nextInt(viewportMaxX - 80) + 40);
             mGame.addAsset(asset);
-            ViewGroup.LayoutParams lp = new ConstraintLayout.LayoutParams(
-//                        ViewGroup.LayoutParams.WRAP_CONTENT,
-//                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    20, 20
-            );
-            mGameView.addView(asset.getView());
+            mGameView.addView(asset.getView(), x, y, 20, 20);
         }
+    }
+
+    @Override
+    public void onClick(View v) {
+        Object tag = v.getTag();
+        if (tag == null || !(tag instanceof GameAsset)) {
+            return;
+        }
+        GameAsset asset = (GameAsset) tag;
+        mGame.removeAsset(asset);
+        mGameView.removeView(v);
+        mGame.incrementScore(10);
+        int score = mGame.getScore();
+        mGameView.setScore(score);
+        if (score > mGameView.getHighScore())
+            mGameView.setHighScore(score);
     }
 }
 

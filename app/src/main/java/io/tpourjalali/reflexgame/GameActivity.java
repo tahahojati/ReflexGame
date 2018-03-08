@@ -8,11 +8,12 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.Log;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -49,6 +50,7 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
         mGameLayout = findViewById(R.id.gameLayout);
 
         //Done with views
+        mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mGame = new Game(this, 6);
         mGameRunner = new GameRunner(this, mGame);
         mGame.setRunner(mGameRunner);
@@ -81,13 +83,19 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     public void addView(View v, int x, int y, int width, int height) {
         v.setX(x);
         v.setY(y);
-        v.setLayoutParams(new ViewGroup.LayoutParams(width, height));
+        Log.d(TAG, "got x: " + x + " got y: " + y);
+        v.setLayoutParams(new ConstraintLayout.LayoutParams(width, height));
         addView(v);
     }
 
     @Override
     public void addView(View view) {
-        mGameLayout.addView(view, 20, 20);
+        mGameLayout.addView(view);
+    }
+
+    @Override
+    public void removeView(View v) {
+        mGameLayout.removeView(v);
     }
 
     @Override

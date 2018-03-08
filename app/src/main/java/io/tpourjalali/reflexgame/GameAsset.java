@@ -1,6 +1,7 @@
 package io.tpourjalali.reflexgame;
 
 import android.animation.Animator;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.view.View;
 
@@ -14,7 +15,7 @@ public class GameAsset implements Serializable {
     private View mView;
     private Animator mAnimator;
 
-    public GameAsset(View drawable, @Nullable Animator an) {
+    public GameAsset(@NonNull View drawable, @Nullable Animator an) {
         mView = drawable;
         mAnimator = an;
     }
@@ -29,4 +30,5 @@ public class GameAsset implements Serializable {
     public View getView() {
         return mView;
     }
+
 }

@@ -95,6 +95,14 @@ public class Game {
         mState = State.NOTSTARTED;
     }
 
+    public void incrementScore(int i) {
+        mScore += i;
+    }
+
+    public void removeAsset(GameAsset asset) {
+        mAssets.remove(asset);
+    }
+
     public enum State {
         RUNNING, PAUSED, NOTSTARTED, FINISHED
     }
@@ -123,6 +131,8 @@ public class Game {
         void resetSoundEffects();
 
         void addView(View view);
+
+        void removeView(View v);
     }
 
     public interface Runner {

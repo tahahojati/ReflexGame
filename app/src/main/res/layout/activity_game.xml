@@ -41,12 +41,14 @@
             style="@style/AppTheme.Scores"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="6dp"
             android:text="@string/lives" />
 
         <LinearLayout
             android:id="@+id/livesLayout"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
+            android:gravity="center_vertical"
             android:orientation="horizontal" />
     </LinearLayout>
 
