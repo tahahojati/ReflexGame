@@ -2,15 +2,16 @@ package io.tpourjalali.reflexgame;
 
 import android.animation.Animator;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.SoundPool;
 import android.os.Bundle;
-import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageButton;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -45,19 +46,18 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
         mGameLayout = findViewById(R.id.gameLayout);
 
         //Done with views
-
-        mGameRunner = new GameRunner(this, mGameLayout);
         mGame = new Game(this, 6);
+        mGameRunner = new GameRunner(this, mGame);
         mGame.setRunner(mGameRunner);
 
-        ImageView vv = (ImageView) getLayoutInflater().inflate(R.layout.image_view, null);
-        vv.setX(10);
-        vv.setY(10);
-        vv.setLayoutParams(
-                new ConstraintLayout.LayoutParams(200, 200)
-        );
-        mGameLayout.addView(vv);
-
+//        ImageView vv = (ImageView) getLayoutInflater().inflate(R.layout.image_view, null);
+//        vv.setX(10);
+//        vv.setY(10);
+//        vv.setLayoutParams(
+//                new ViewGroup.LayoutParams(200, 200)
+//        );
+//        mGameLayout.addView(vv);
+//
 
         mGame.start();
     }
@@ -71,8 +71,20 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     }
 
     @Override
+    public View getViewPort() {
+        return mGameLayout;
+    }
+    @Override
     public void addView(View v, int x, int y, int width, int height) {
+        v.setX(x);
+        v.setY(y);
+        v.setLayoutParams(new ViewGroup.LayoutParams(width, height));
+        addView(v);
+    }
 
+    @Override
+    public void addView(View view) {
+        mGameLayout.addView(view);
     }
 
     @Override
@@ -82,12 +94,27 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
     @Override
     public void setLives(int lives) {
-
+        mLivesLayout.removeAllViews();
+        Resources resources = getResources();
+        int hearWidth = (int) resources.getDimension(R.dimen.heart_width), heartHeight = (int) resources.getDimension(R.dimen.heart_height);
+        for (int i = 0; i < lives; ++i) {
+            ImageView lifeView = new ImageView(this);
+            lifeView.setImageDrawable(mHeartDrawable);
+            lifeView.setLayoutParams(new LinearLayout.LayoutParams(
+                    hearWidth, heartHeight
+            ));
+            mLivesLayout.addView(lifeView);
+        }
     }
 
     @Override
     public void setScore(int score) {
 
+    }
+
+    @Override
+    public int getHighScore() {
+        return 0;
     }
 
     @Override
@@ -97,6 +124,16 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
     @Override
     public void clearViewPort() {
+
+    }
+
+    @Override
+    public void displayHighScore() {
+
+    }
+
+    @Override
+    public void resetSoundEffects() {
 
     }
 

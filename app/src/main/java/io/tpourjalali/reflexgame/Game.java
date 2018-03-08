@@ -11,19 +11,17 @@ import java.util.concurrent.ConcurrentLinkedDeque;
  */
 
 public class Game {
-    private int mScore, mLevel, mLives;
+    private int mScore, mLevel, mLives, mLivesInitial;
     private ConcurrentLinkedDeque<GameAsset> mAssets;
     private Runner mRunner;
     private GameView mGameView;
     private State mState;
 
     public Game(GameView gameView, int lives) {
-        mScore = mLevel = 0;
         mAssets = new ConcurrentLinkedDeque<>();
-        ++mLevel;
-        mLives = lives;
+        mLivesInitial = lives;
         mGameView = gameView;
-        mState = State.NOTSTARTED;
+        reset();
     }
 
     public void start() throws IllegalStateException {
@@ -75,7 +73,6 @@ public class Game {
 
     public void setRunner(Runner runner) {
         mRunner = runner;
-        mRunner.setGame(this);
     }
 
     public GameView getGameView() {
@@ -90,6 +87,14 @@ public class Game {
         mState = state;
     }
 
+    public void reset() {
+        mAssets.clear();
+        mScore = 0;
+        mLevel = 1;
+        mLives = mLivesInitial;
+        mState = State.NOTSTARTED;
+    }
+
     public enum State {
         RUNNING, PAUSED, NOTSTARTED, FINISHED
     }
@@ -99,20 +104,28 @@ public class Game {
 
         void addView(View v, int x, int y, int width, int height);
 
+        View getViewPort();
+
         void runAnimator(Animator animator);
 
         void setLives(int lives);
 
         void setScore(int score);
 
+        int getHighScore();
+
         void setHighScore(int highScore);
 
         void clearViewPort();
+
+        void displayHighScore();
+
+        void resetSoundEffects();
+
+        void addView(View view);
     }
 
     public interface Runner {
-        void setGame(Game game);
-
         void pause();
 
         void end();
