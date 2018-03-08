@@ -70,16 +70,16 @@ public class GameRunner implements Game.Runner, Runnable {
     }
 
     private void clear() {
+        //empty for now!
+    }
+
+    private void setup() { //#1
         mGame.reset();
         mGameView.setLives(mGame.getLives());
         mGameView.setScore(mGame.getScore());
         mGameView.displayHighScore();
         mHighScore = mGameView.getHighScore();
         mGameView.resetSoundEffects();
-    }
-
-    private void setup() { //#1
-        //empty for now.
     }
 
     private void recoverFromPause() {
@@ -99,8 +99,8 @@ public class GameRunner implements Game.Runner, Runnable {
     public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         View viewport = mGameView.getViewPort();
-        int viewportMaxX = viewport.getMeasuredWidth();
-        int viewportMaxY = viewport.getMeasuredHeight();
+        int viewportMaxX = 400;//viewport.getHeight();
+        int viewportMaxY = 600;//viewport.getWidth();
         Log.d(TAG, "in run method");
 //        while (!Thread.interrupted()) //TODO: uncomment this!
         {
@@ -108,10 +108,11 @@ public class GameRunner implements Game.Runner, Runnable {
             assetView.setY(random.nextInt(viewportMaxY - 70) + 35);
             assetView.setX(random.nextInt(viewportMaxX - 80) + 40);
             GameAsset asset = new GameAsset(assetView, null);
+            mGame.addAsset(asset);
             ViewGroup.LayoutParams lp = new ConstraintLayout.LayoutParams(
 //                        ViewGroup.LayoutParams.WRAP_CONTENT,
 //                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    100, 100
+                    20, 20
             );
             mGameView.addView(asset.getView());
         }

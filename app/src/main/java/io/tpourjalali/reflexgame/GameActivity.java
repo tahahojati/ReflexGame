@@ -10,6 +10,7 @@ import android.media.SoundPool;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageButton;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -19,6 +20,8 @@ import android.widget.TextView;
 
 public class GameActivity extends AppCompatActivity implements Game.GameView {
     public static final String ASSET_SPOT = "SPOT";
+    public static final String TAG = "GameActivity";
+    private static final String HIGH_SCORE_PREFERECE = "high score";
     private AppCompatImageButton mSettingsImageButton;
     private TextView mScoreTextView, mHighScoreTextView;
     private LinearLayout mLivesLayout;
@@ -84,7 +87,7 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
     @Override
     public void addView(View view) {
-        mGameLayout.addView(view);
+        mGameLayout.addView(view, 20, 20);
     }
 
     @Override
@@ -96,30 +99,36 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     public void setLives(int lives) {
         mLivesLayout.removeAllViews();
         Resources resources = getResources();
-        int hearWidth = (int) resources.getDimension(R.dimen.heart_width), heartHeight = (int) resources.getDimension(R.dimen.heart_height);
+        int hearWidth = (int) resources.getDimension(R.dimen.heart_width),
+                heartHeight = (int) resources.getDimension(R.dimen.heart_height),
+                heartMargin = (int) resources.getDimension(R.dimen.heart_margin);
+        Log.d(TAG, "Heart height is: " + Integer.toString(heartHeight));
         for (int i = 0; i < lives; ++i) {
             ImageView lifeView = new ImageView(this);
             lifeView.setImageDrawable(mHeartDrawable);
-            lifeView.setLayoutParams(new LinearLayout.LayoutParams(
-                    hearWidth, heartHeight
-            ));
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(hearWidth, heartHeight);
+            lp.setMargins(heartMargin, 0, heartMargin, 0);
+            lifeView.setLayoutParams(lp);
             mLivesLayout.addView(lifeView);
         }
     }
 
     @Override
     public void setScore(int score) {
-
+        String scoreStr = getString(R.string.currentScore, score);
+        mScoreTextView.setText(scoreStr);
     }
 
     @Override
     public int getHighScore() {
-        return 0;
+        return mPreferences.getInt(HIGH_SCORE_PREFERECE, 0);
     }
 
     @Override
     public void setHighScore(int highScore) {
-
+        mPreferences.edit()
+                .putInt(HIGH_SCORE_PREFERECE, highScore)
+                .apply();
     }
 
     @Override
@@ -129,7 +138,9 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
     @Override
     public void displayHighScore() {
-
+        int highscore = mPreferences.getInt(HIGH_SCORE_PREFERECE, 0);
+        String highscoreStr = getString(R.string.highScore, highscore);
+        mHighScoreTextView.setText(highscoreStr);
     }
 
     @Override

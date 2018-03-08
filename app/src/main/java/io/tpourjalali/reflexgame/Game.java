@@ -30,7 +30,7 @@ public class Game {
         if (Objects.isNull(mRunner))
             throw new IllegalStateException("No runner specified");
         else {
-            mState = State.RUNNING;
+            mState = State.NOTSTARTED;
             mRunner.resume();
         }
     }
