@@ -8,12 +8,15 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -29,6 +32,7 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     private Drawable mHeartDrawable;
     private GradientDrawable mSpotDrawable;
     private FrameLayout mGameLayout;
+    private Handler mHandler = new Handler();
     //End of view element declerations
 
     private SharedPreferences mPreferences; //we'll save a reference to default sharedpreferences.
@@ -63,8 +67,12 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 //        );
 //        mGameLayout.addView(vv);
 //
-
-        mGame.start();
+        mGameLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                mGame.start();
+            }
+        });
     }
 
     @Override
@@ -96,6 +104,16 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     @Override
     public void removeView(View v) {
         mGameLayout.removeView(v);
+    }
+
+    @Override
+    public void startAnimation(@NonNull Animator animator) {
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                animator.start();
+            }
+        });
     }
 
     @Override

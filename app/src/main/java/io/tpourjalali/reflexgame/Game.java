@@ -133,6 +133,8 @@ public class Game {
         void addView(View view);
 
         void removeView(View v);
+
+        void startAnimation(Animator animator);
     }
 
     public interface Runner {

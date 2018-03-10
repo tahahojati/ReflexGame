@@ -1,5 +1,9 @@
 package io.tpourjalali.reflexgame;
 
+import android.animation.Animator;
+import android.animation.AnimatorSet;
+import android.animation.ObjectAnimator;
+import android.graphics.Path;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -8,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -16,10 +21,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by ProfessorTaha on 3/6/2018.
  */
 
-public class GameRunner implements Game.Runner, Runnable, View.OnClickListener {
+public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, Animator.AnimatorListener {
     public static final String TAG = "GameRunner";
     public static final String MESSAGE_DATA_ASSET = "asset";
     private final Game.GameView mGameView;
+    private final HashMap<Animator, View> mAnimatorMap = new HashMap<>();
     private final Handler mHandler = new Handler(Looper.getMainLooper()) {
         @Override
         public void handleMessage(Message msg) {
@@ -65,7 +71,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener {
             recoverFromPause();
         }
         mGame.setState(Game.State.RUNNING);
-        mThread.enqueRunnable(this::run);
+        mThread.enqueRunnable(this);
         mThread.run(); //TODO: comment this
     }
 
@@ -99,8 +105,8 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener {
     public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         View viewport = mGameView.getViewPort();
-        int viewportMaxX = 400;//viewport.getHeight();
-        int viewportMaxY = 600;//viewport.getWidth();
+        int viewportMaxX = viewport.getHeight();
+        int viewportMaxY = viewport.getWidth();
         Log.d(TAG, "in run method");
 //        while (!Thread.interrupted()) //TODO: uncomment this!
         {
@@ -112,9 +118,27 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener {
             int x = (random.nextInt(viewportMaxX - 80) + 40);
             mGame.addAsset(asset);
             mGameView.addView(asset.getView(), x, y, 20, 20);
+            mGameView.startAnimation(generateAnimator(0, 0, asset.getView()));
         }
     }
 
+    private Animator generateAnimator(int speed, int duration, @NonNull View v) {
+        View viewport = mGameView.getViewPort();
+        int viewportMaxX = viewport.getWidth();
+        int viewportMaxY = viewport.getHeight();
+        ThreadLocalRandom random = ThreadLocalRandom.current();
+        int toX = random.nextInt(viewportMaxX);
+        int toY = random.nextInt(viewportMaxY);
+        int final_distance = speed * duration;
+        Objects.requireNonNull(v);
+        AnimatorSet as = new AnimatorSet();
+        Path p = new Path();
+        p.lineTo(toX, toY);
+        ObjectAnimator animation = ObjectAnimator.ofFloat(v, "x", "y", p);
+        animation.addListener(this);
+        animation.setDuration(4000);
+        return animation;
+    }
     @Override
     public void onClick(View v) {
         Object tag = v.getTag();
@@ -129,6 +153,28 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener {
         mGameView.setScore(score);
         if (score > mGameView.getHighScore())
             mGameView.setHighScore(score);
+    }
+
+    @Override
+    public void onAnimationStart(Animator animation) {
+
+    }
+
+    @Override
+    public void onAnimationEnd(@NonNull Animator animation) {
+        View v = (View) ((ObjectAnimator) animation).getTarget();
+        mGameView.removeView(v);
+        mGame.removeAsset((GameAsset) v.getTag());
+    }
+
+    @Override
+    public void onAnimationCancel(Animator animation) {
+
+    }
+
+    @Override
+    public void onAnimationRepeat(Animator animation) {
+
     }
 }
 
