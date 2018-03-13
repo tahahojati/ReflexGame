@@ -114,8 +114,6 @@ public class Game {
 
         View getViewPort();
 
-        void runAnimator(Animator animator);
-
         void setLives(int lives);
 
         void setScore(int score);
@@ -135,6 +133,8 @@ public class Game {
         void removeView(View v);
 
         void startAnimation(Animator animator);
+
+        void playSound(int sound_id);
     }
 
     public interface Runner {

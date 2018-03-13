@@ -6,9 +6,9 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
@@ -26,13 +26,16 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     public static final String ASSET_SPOT = "SPOT";
     public static final String TAG = "GameActivity";
     private static final String HIGH_SCORE_PREFERECE = "high score";
+    public static int SOUND_HIT;
+    public static int SOUND_MISS;
+    public static int SOUND_DISAPPEAR;
     private AppCompatImageButton mSettingsImageButton;
     private TextView mScoreTextView, mHighScoreTextView;
     private LinearLayout mLivesLayout;
     private Drawable mHeartDrawable;
     private GradientDrawable mSpotDrawable;
     private FrameLayout mGameLayout;
-    private Handler mHandler = new Handler();
+    //private Handler mHandler = new Handler();
     //End of view element declerations
 
     private SharedPreferences mPreferences; //we'll save a reference to default sharedpreferences.
@@ -59,6 +62,18 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
         mGameRunner = new GameRunner(this, mGame);
         mGame.setRunner(mGameRunner);
 
+        //Sound
+        SoundPool.Builder sb = new SoundPool.Builder();
+        AudioAttributes.Builder ab = new AudioAttributes.Builder();
+        ab.setContentType(AudioAttributes.CONTENT_TYPE_MUSIC);
+        ab.setUsage(AudioAttributes.USAGE_GAME);
+        sb.setMaxStreams(4);
+        sb.setAudioAttributes(ab.build());
+        mSoundPool = sb.build();
+        SOUND_HIT = mSoundPool.load(this, R.raw.hit, 100);
+        SOUND_DISAPPEAR = mSoundPool.load(this, R.raw.disappear, 100);
+        SOUND_MISS = mSoundPool.load(this, R.raw.miss, 100);
+
 //        ImageView vv = (ImageView) getLayoutInflater().inflate(R.layout.image_view, null);
 //        vv.setX(10);
 //        vv.setY(10);
@@ -73,6 +88,12 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
                 mGame.start();
             }
         });
+    }
+
+    @Override
+    protected void onDestroy() {
+        mSoundPool.release();
+        super.onDestroy();
     }
 
     @Override
@@ -108,17 +129,12 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
     @Override
     public void startAnimation(@NonNull Animator animator) {
-        mHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                animator.start();
-            }
-        });
+        runOnUiThread(animator::start);
     }
 
     @Override
-    public void runAnimator(Animator animator) {
-
+    public void playSound(int sound_id) {
+        mSoundPool.play(sound_id, 1.0f, 1.0f, 100, 0, 1);
     }
 
     @Override

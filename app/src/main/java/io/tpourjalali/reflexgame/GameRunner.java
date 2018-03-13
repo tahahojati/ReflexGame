@@ -1,7 +1,6 @@
 package io.tpourjalali.reflexgame;
 
 import android.animation.Animator;
-import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.graphics.Path;
 import android.os.Bundle;
@@ -12,6 +11,8 @@ import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.View;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
@@ -107,6 +108,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         View viewport = mGameView.getViewPort();
         int viewportMaxX = viewport.getHeight();
         int viewportMaxY = viewport.getWidth();
+        int level = mGame.getLevel();
         Log.d(TAG, "in run method");
 //        while (!Thread.interrupted()) //TODO: uncomment this!
         {
@@ -118,29 +120,108 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
             int x = (random.nextInt(viewportMaxX - 80) + 40);
             mGame.addAsset(asset);
             mGameView.addView(asset.getView(), x, y, 20, 20);
-            mGameView.startAnimation(generateAnimator(0, 0, asset.getView()));
+            float speed = getRandomSpeed(random, level);
+            float duration = getRandomDuration(random, level);
+            mGameView.startAnimation(generateAnimator(speed, duration, asset.getView()));
         }
     }
 
-    private Animator generateAnimator(int speed, int duration, @NonNull View v) {
+    private float getRandomDuration(ThreadLocalRandom random, int level) {
+        double g = random.nextGaussian();
+        g *= level / 2;
+        g += 10 - Math.min(level * 0.7, 8);
+        return (float) Math.max(2, g);
+    }
+
+    private float getRandomSpeed(ThreadLocalRandom random, int level) {
+        double g = random.nextGaussian();
+//        g/=2;
+        g *= level * 50;
+        g += level * 100;
+        return (float) Math.max(g, 100);
+    }
+
+    private Animator generateAnimator(float speed, float duration, @NonNull View v) {
+        float final_distance = speed * duration;
+        ObjectAnimator animation;
+        Path path = new Path();
+        float current_x = v.getX(), current_y = v.getY();
+        float target_x, target_y;
         View viewport = mGameView.getViewPort();
-        int viewportMaxX = viewport.getWidth();
-        int viewportMaxY = viewport.getHeight();
+        int viewportMaxX = viewport.getMeasuredWidth();
+        int viewportMaxY = viewport.getMeasuredHeight();
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        int toX = random.nextInt(viewportMaxX);
-        int toY = random.nextInt(viewportMaxY);
-        int final_distance = speed * duration;
-        Objects.requireNonNull(v);
-        AnimatorSet as = new AnimatorSet();
-        Path p = new Path();
-        p.lineTo(toX, toY);
-        ObjectAnimator animation = ObjectAnimator.ofFloat(v, "x", "y", p);
+        float distX = (int) (((random.nextFloat() * 0.8 + 0.1) * 2 - 0.9) * final_distance);
+        float distY = (int) Math.sqrt(final_distance * final_distance - distX * distX) * (random.nextInt(2) * 2 - 1);
+        //calculate all the times where direction change will be necessary:
+        float xSpeed = (distX) / final_distance * speed;
+        float ySpeed = (distY) / final_distance * speed;
+        ArrayList<Float> times_of_interest = calculateTimesOfInterest(0, viewportMaxX, (int) v.getX(), duration, xSpeed);
+        times_of_interest.addAll(calculateTimesOfInterest(0, viewportMaxY, (int) v.getY(), duration, ySpeed));
+        times_of_interest.add((float) duration);
+        times_of_interest.add(0.0f);
+
+        Collections.sort(times_of_interest);
+        //now we know all the times of collusion with the walls. So we want to generate the animations.
+
+        path.moveTo(current_x, current_y);
+
+        for (int i = 1; i < times_of_interest.size(); ++i) {
+            float this_duration = times_of_interest.get(i) - times_of_interest.get(i - 1);
+            target_x = current_x + this_duration * xSpeed;
+            target_y = current_y + this_duration * ySpeed;
+            if (isCloseTo(target_x, 0.0)) {
+                xSpeed = Math.abs(xSpeed);
+            } else if (isCloseTo(target_x, viewport.getMeasuredWidth())) {
+                xSpeed = -Math.abs(xSpeed);
+            }
+            if (isCloseTo(target_y, 0.0)) {
+                ySpeed = Math.abs(ySpeed);
+            } else if (isCloseTo(target_y, viewport.getMeasuredHeight())) {
+                ySpeed = -Math.abs(ySpeed);
+            }
+            path.lineTo(target_x, target_y);
+            current_x = target_x;
+            current_y = target_y;
+        }
+        animation = ObjectAnimator.ofFloat(v, "x", "y", path);
+        animation.setDuration((long) duration * 1000);
         animation.addListener(this);
-        animation.setDuration(4000);
+//        animation.setInterpolator(new LinearInterpolator());
         return animation;
     }
+
+    private boolean isCloseTo(float v1, double v2) {
+        return (Math.abs(v1 - v2) < 0.01);
+    }
+
+
+    private ArrayList<Float> calculateTimesOfInterest(int minVal, int maxVal, float currentVal, float duration, float speed) {
+        ArrayList<Float> res = new ArrayList<>();
+        float target;
+        //calculate the first encounter with the wall.
+        if (isCloseTo(currentVal, minVal))
+            speed = Math.abs(speed);
+        else if (isCloseTo(currentVal, maxVal))
+            speed = -Math.abs(speed);
+        float time = 0;
+        while (time < duration) {
+            target = minVal;
+            if (speed > 0)
+                target = maxVal;
+            float current_duration = (target - currentVal) / speed;
+            time += current_duration;
+            currentVal = target;
+            if (time < duration)
+                res.add(time);
+            speed = -speed;
+        }
+        return res;
+    }
+
     @Override
     public void onClick(View v) {
+        mGameView.playSound(GameActivity.SOUND_HIT);
         Object tag = v.getTag();
         if (tag == null || !(tag instanceof GameAsset)) {
             return;
@@ -162,6 +243,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
 
     @Override
     public void onAnimationEnd(@NonNull Animator animation) {
+        mGameView.playSound(GameActivity.SOUND_MISS);
         View v = (View) ((ObjectAnimator) animation).getTarget();
         mGameView.removeView(v);
         mGame.removeAsset((GameAsset) v.getTag());
