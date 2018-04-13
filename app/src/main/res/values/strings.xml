@@ -4,4 +4,5 @@
     <string name="currentLevel">Level: %d </string>
     <string name="highScore">High Score: %d </string>
     <string name="lives">Lives:</string>
+    <string name="num_lives_preference_title">Number of Lives</string>
 </resources>
