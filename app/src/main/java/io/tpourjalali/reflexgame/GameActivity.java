@@ -1,6 +1,7 @@
 package io.tpourjalali.reflexgame;
 
 import android.animation.Animator;
+import android.app.Dialog;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.Color;
@@ -9,10 +10,15 @@ import android.graphics.drawable.GradientDrawable;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.os.Bundle;
+import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.constraint.ConstraintLayout;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.Log;
 import android.view.View;
@@ -81,6 +87,13 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 //                new ViewGroup.LayoutParams(200, 200)
 //        );
 //        mGameLayout.addView(vv);
+        mSettingsImageButton.setOnClickListener((View view) -> {
+            PreferenceFragmentCompat pf = new PreferencesFragment();
+            FragmentManager fm = getSupportFragmentManager();
+            DialogFragment df = new DialogFragment();
+            df.setTargetFragment(pf, 100);
+            df.show(fm, "tag");
+        });
 //
         mGameLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
