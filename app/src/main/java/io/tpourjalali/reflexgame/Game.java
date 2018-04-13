@@ -35,7 +35,7 @@ public class Game {
         }
     }
 
-    public void addAsset(GameAsset asset) {
+    synchronized public void addAsset(GameAsset asset) {
         mAssets.add(asset);
     }
 
@@ -43,7 +43,7 @@ public class Game {
         return mScore;
     }
 
-    public void setScore(int score) {
+    synchronized public void setScore(int score) {
         mScore = score;
     }
 
@@ -51,7 +51,7 @@ public class Game {
         return mLevel;
     }
 
-    public void setLevel(int level) {
+    synchronized public void setLevel(int level) {
         mLevel = level;
     }
 
@@ -59,7 +59,7 @@ public class Game {
         return mLives;
     }
 
-    public void setLives(int lives) {
+    synchronized public void setLives(int lives) {
         mLives = lives;
     }
 
@@ -71,7 +71,7 @@ public class Game {
         return mRunner;
     }
 
-    public void setRunner(Runner runner) {
+    synchronized public void setRunner(Runner runner) {
         mRunner = runner;
     }
 
@@ -83,7 +83,7 @@ public class Game {
         return mState;
     }
 
-    public void setState(State state) {
+    synchronized public void setState(State state) {
         mState = state;
     }
 

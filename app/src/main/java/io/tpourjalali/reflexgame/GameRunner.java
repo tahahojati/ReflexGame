@@ -37,7 +37,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         }
     };
     AtomicInteger mCurrentViewTag = new AtomicInteger(0);
-    private int mHighScore = 0;
+    private AtomicInteger mHighScore = new AtomicInteger(0);
     private SingleTaskThread mThread;
     private Game mGame;
 
@@ -85,11 +85,12 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         mGameView.setLives(mGame.getLives());
         mGameView.setScore(mGame.getScore());
         mGameView.displayHighScore();
-        mHighScore = mGameView.getHighScore();
+        mHighScore.set(mGameView.getHighScore());
         mGameView.resetSoundEffects();
     }
 
     private void recoverFromPause() {
+
     }
 
     @Override
@@ -102,11 +103,12 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         //clear everything and be ready for a new game.
     }
 
+    //runs on 2nd thread.
     @Override
     public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         View viewport = mGameView.getViewPort();
-        int viewportMaxX = viewport.getHeight();
+        int viewportMaxX = vicd ewport.getHeight();
         int viewportMaxY = viewport.getWidth();
         int level = mGame.getLevel();
         Log.d(TAG, "in run method");
@@ -121,16 +123,39 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
             mGame.addAsset(asset);
             mGameView.addView(asset.getView(), x, y, 20, 20);
             float speed = getRandomSpeed(random, level);
-            float duration = getRandomDuration(random, level);
+            float duration = getRandomAnimationDuration(random, level);
             mGameView.startAnimation(generateAnimator(speed, duration, asset.getView()));
+            int delayDuration = getRandomDelayDuration(random, mGame.getLevel());
+            delayMillis(delayDuration);
+
         }
     }
 
-    private float getRandomDuration(ThreadLocalRandom random, int level) {
+    private void delayMillis(int delayDuration) {
+        if(delayDuration < 500) {
+            long time = System.currentTimeMillis();
+            while ((time + delayDuration) < System.currentTimeMillis()) ;
+        } else {
+            synchronized (this){
+                try {
+                    this.wait(delayDuration);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        }
+    }
+
+    private float getRandomAnimationDuration(ThreadLocalRandom random, int level) {
         double g = random.nextGaussian();
         g *= level / 2;
         g += 10 - Math.min(level * 0.7, 8);
         return (float) Math.max(2, g);
+    }
+    private int getRandomDelayDuration(ThreadLocalRandom random, int level) {
+        double g = random.nextGaussian();
+        int mean = (int) (5000 * Math.pow(0.66667, level ));
+        return Math.max(1, (int)(mean + g*mean));
     }
 
     private float getRandomSpeed(ThreadLocalRandom random, int level) {
