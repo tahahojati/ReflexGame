@@ -3,6 +3,7 @@ package io.tpourjalali.reflexgame;
 import android.animation.Animator;
 import android.view.View;
 
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentLinkedDeque;
 
@@ -108,9 +109,15 @@ public class Game {
     }
 
     public interface GameView {
-        View createAssetView(String asset_id);
+        String ASSET_SPOT = "SPOT";
+        String KEY_ASSET_TYPE = "asset_type";
+        String KEY_ASSET_COLOR = "asset_color";
+        String KEY_ASSET_WIDTH = "asset_width";
+        String KEY_ASSET_HEIGHT = "asset_height";
 
-        void addView(View v, int x, int y, int width, int height);
+        View createAssetView(Map<String, Object> asset_description);
+
+        void addView(View v, int x, int y);
 
         View getViewPort();
 

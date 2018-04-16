@@ -2,21 +2,29 @@ package io.tpourjalali.reflexgame;
 
 import android.animation.Animator;
 import android.animation.ObjectAnimator;
+import android.graphics.Color;
 import android.graphics.Path;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
+import android.view.animation.LinearInterpolator;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import io.tpourjalali.reflexgame.Game.GameView;
+
+import static io.tpourjalali.reflexgame.Game.GameView.*;
+import static io.tpourjalali.reflexgame.Game.GameView.KEY_ASSET_TYPE;
 
 /**
  * Created by ProfessorTaha on 3/6/2018.
@@ -25,30 +33,22 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, Animator.AnimatorListener {
     public static final String TAG = "GameRunner";
     public static final String MESSAGE_DATA_ASSET = "asset";
-    private final Game.GameView mGameView;
+    private final GameView mGameView;
     private final HashMap<Animator, View> mAnimatorMap = new HashMap<>();
-    private final Handler mHandler = new Handler(Looper.getMainLooper()) {
-        @Override
-        public void handleMessage(Message msg) {
-            //we only handle a single type of msg. we animate a view!
-            Bundle data = msg.getData();
-            GameAsset asset = (GameAsset) data.getSerializable(MESSAGE_DATA_ASSET);
-            asset.getAnimator().start();
-        }
-    };
     AtomicInteger mCurrentViewTag = new AtomicInteger(0);
     private AtomicInteger mHighScore = new AtomicInteger(0);
     private SingleTaskThread mThread;
+    private final LinearInterpolator mLinearInterpolator = new LinearInterpolator();
     private Game mGame;
 
 
-    public GameRunner(@NonNull Game.GameView gameView, @NonNull Game game) {
+    public GameRunner(@NonNull GameView gameView, @NonNull Game game) {
         Objects.requireNonNull(gameView);
         mGameView = gameView;
         Objects.requireNonNull(game);
         mGame = game;
         mThread = new SingleTaskThread();
-//        mThread.start();  //TODO: uncomment this when everything works.
+        mThread.start();  //TODO: uncomment this when everything works.
     }
 
     public void shutdown() {
@@ -73,7 +73,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         }
         mGame.setState(Game.State.RUNNING);
         mThread.enqueRunnable(this);
-        mThread.run(); //TODO: comment this
+//        mThread.run(); //TODO: comment this
     }
 
     private void clear() {
@@ -108,20 +108,25 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
     public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         View viewport = mGameView.getViewPort();
-        int viewportMaxX = vicd ewport.getHeight();
+        int viewportMaxX = viewport.getHeight();
         int viewportMaxY = viewport.getWidth();
         int level = mGame.getLevel();
         Log.d(TAG, "in run method");
-//        while (!Thread.interrupted()) //TODO: uncomment this!
+        while (!Thread.interrupted()) //TODO: uncomment this!
         {
-            View assetView = mGameView.createAssetView("spot");
+            Map<String, Object> assetDescription = new ArrayMap<>(3);
+            assetDescription.put(KEY_ASSET_TYPE, ASSET_SPOT);
+            assetDescription.put(KEY_ASSET_COLOR, Color.BLUE);
+            assetDescription.put(KEY_ASSET_HEIGHT, 60);
+
+            View assetView = mGameView.createAssetView(assetDescription);
             GameAsset asset = new GameAsset(assetView, null);
             assetView.setTag(asset); // we tag the view with the asset so we can find the asset when view is clicked.
             assetView.setOnClickListener(this);
             int y = (random.nextInt(viewportMaxY - 70) + 35);
             int x = (random.nextInt(viewportMaxX - 80) + 40);
             mGame.addAsset(asset);
-            mGameView.addView(asset.getView(), x, y, 20, 20);
+            mGameView.addView(asset.getView(), x, y);
             float speed = getRandomSpeed(random, level);
             float duration = getRandomAnimationDuration(random, level);
             mGameView.startAnimation(generateAnimator(speed, duration, asset.getView()));
@@ -211,6 +216,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         }
         animation = ObjectAnimator.ofFloat(v, "x", "y", path);
         animation.setDuration((long) duration * 1000);
+        animation.setInterpolator(mLinearInterpolator);
         animation.addListener(this);
 //        animation.setInterpolator(new LinearInterpolator());
         return animation;
