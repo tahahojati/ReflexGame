@@ -6,6 +6,7 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.StateListDrawable;
 import android.media.AudioAttributes;
 import android.media.SoundPool;
 import android.os.Bundle;
@@ -19,6 +20,7 @@ import android.support.v7.preference.PreferenceFragmentCompat;
 import android.support.v7.widget.AppCompatImageButton;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -37,10 +39,11 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
     private static final String HIGH_SCORE_PREFERECE = "high score";
     private AppCompatImageButton mSettingsImageButton;
-    private TextView mScoreTextView, mHighScoreTextView;
+    private TextView mScoreTextView, mHighScoreTextView, mStartAndGameOverTV;
+    private ConstraintLayout mGameOverLayout;
     private LinearLayout mLivesLayout;
     private Drawable mHeartDrawable;
-    private GradientDrawable mSpotDrawable;
+    private StateListDrawable mSpotDrawable;
     private FrameLayout mGameLayout;
     //private Handler mHandler = new Handler();
     //End of view element declerations
@@ -55,17 +58,19 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_game);
 
+        mStartAndGameOverTV = findViewById(R.id.gameover_start_tv);
+        mGameOverLayout = findViewById(R.id.gameOverLayout);
         mSettingsImageButton = findViewById(R.id.settingsimageButton);
         mScoreTextView = findViewById(R.id.scoreTextView);
         mHighScoreTextView = findViewById(R.id.highScoreTextView);
         mLivesLayout = findViewById(R.id.livesLayout);
         mHeartDrawable = getDrawable(R.drawable.ic_heart);
-        mSpotDrawable = (GradientDrawable) getDrawable(R.drawable.spot);
+        mSpotDrawable = (StateListDrawable) getDrawable(R.drawable.spot);
         mGameLayout = findViewById(R.id.gameLayout);
 
         //Done with views
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mGame = new Game(this, 6);
+        mGame = new Game(this, 1);
         mGameRunner = new GameRunner(this, mGame);
         mGame.setRunner(mGameRunner);
 
@@ -99,7 +104,11 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
         mGameLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
-                mGame.start();
+                mGameOverLayout.setOnClickListener((x) -> {
+                    x.setVisibility(View.GONE);
+                    mGame.reset();
+                    mGame.start();
+                });
             }
         });
     }
@@ -114,7 +123,7 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     public View createAssetView(Map<String, Object> asset_description) {
         ImageView v = new ImageView(this);
         String type = (String) asset_description.get(KEY_ASSET_TYPE);
-        Integer color = (Integer) asset_description.get(KEY_ASSET_COLOR);
+//        Integer color = (Integer) asset_description.get(KEY_ASSET_COLOR);
         Integer width = (Integer) asset_description.get(KEY_ASSET_WIDTH);
         Integer height = (Integer) asset_description.get(KEY_ASSET_HEIGHT);
         switch (type){
@@ -122,21 +131,16 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
                 v.setImageDrawable(mSpotDrawable);
                 break;
         }
-        if(color != null){
-            mSpotDrawable.setColor(color);
-        } else {
-            mSpotDrawable.setColor(Color.BLACK);
-        }
         if (width == null)
-            width = 20;
+            width = 100;
         if (height == null)
-            height = 20;
+            height = 100;
         v.setLayoutParams(new ConstraintLayout.LayoutParams(width, height));
         return v;
     }
 
     @Override
-    public View getViewPort() {
+    public ViewGroup getViewPort() {
         return mGameLayout;
     }
     @Override
@@ -155,7 +159,11 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     @Override
     public void removeView(View v) {
 
-        runOnUiThread(() -> mGameLayout.removeView(v));
+        runOnUiThread(() -> {
+            mGameLayout.removeView(v);
+            v.clearAnimation();
+//            ((GameAsset)v.getTag()).getAnimator().cancel();
+        });
     }
 
     @Override
@@ -211,8 +219,21 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
     }
 
     @Override
+    public void showGameOverScreen() {
+        mStartAndGameOverTV.setText(getString(R.string.gameOverText));
+        mGameOverLayout.setVisibility(View.VISIBLE);
+    }
+
+    @Override
     public void clearViewPort() {
-        //TODO:implement method
+        int c  =mGameLayout.getChildCount();
+        for(int i = 0; i< c; ++i){
+            View v = mGameLayout.getChildAt(i);
+            if(v!= null){
+                v.clearAnimation();
+            }
+        }
+        mGameLayout.removeAllViews();
     }
 
     @Override

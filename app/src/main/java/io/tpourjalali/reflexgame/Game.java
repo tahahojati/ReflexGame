@@ -2,6 +2,7 @@ package io.tpourjalali.reflexgame;
 
 import android.animation.Animator;
 import android.view.View;
+import android.view.ViewGroup;
 
 import java.util.Map;
 import java.util.Objects;
@@ -119,7 +120,7 @@ public class Game {
 
         void addView(View v, int x, int y);
 
-        View getViewPort();
+        ViewGroup getViewPort();
 
         void setLives(int lives);
 
@@ -142,6 +143,8 @@ public class Game {
         void startAnimation(Animator animator);
 
         void playSound(int sound_id);
+
+        void showGameOverScreen();
     }
 
     public interface Runner {

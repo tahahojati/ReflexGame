@@ -5,4 +5,7 @@
     <string name="highScore">High Score: %d </string>
     <string name="lives">Lives:</string>
     <string name="num_lives_preference_title">Number of Lives</string>
+    <string name="gameOverText">Game Over!</string>
+    <string name="start_text">Tap to start</string>
+    <string name="helloText">Welcome!</string>
 </resources>

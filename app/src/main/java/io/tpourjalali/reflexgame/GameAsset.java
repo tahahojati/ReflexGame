@@ -19,8 +19,15 @@ public class GameAsset implements Serializable {
         mView = drawable;
         mAnimator = an;
     }
+    public GameAsset(@NonNull View drawable) {
+        mView = drawable;
+    }
 
     public void draw() {
+    }
+
+    public void setAnimator(Animator animator) {
+        mAnimator = animator;
     }
 
     public Animator getAnimator() {

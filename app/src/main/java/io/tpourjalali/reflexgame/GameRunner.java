@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.os.Message;
 import android.support.annotation.NonNull;
+import android.text.Layout;
 import android.util.ArrayMap;
 import android.util.Log;
 import android.view.View;
@@ -112,28 +113,29 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         int viewportMaxY = viewport.getWidth();
         int level = mGame.getLevel();
         Log.d(TAG, "in run method");
-        while (!Thread.interrupted()) //TODO: uncomment this!
+        while (mThread.mRunning.get()&&!Thread.interrupted()) //TODO: uncomment this!
         {
             Map<String, Object> assetDescription = new ArrayMap<>(3);
             assetDescription.put(KEY_ASSET_TYPE, ASSET_SPOT);
-            assetDescription.put(KEY_ASSET_COLOR, Color.BLUE);
-            assetDescription.put(KEY_ASSET_HEIGHT, 60);
+//            assetDescription.put(KEY_ASSET_COLOR, Color.BLUE);
+//            assetDescription.put(KEY_ASSET_HEIGHT, 60);
 
             View assetView = mGameView.createAssetView(assetDescription);
-            GameAsset asset = new GameAsset(assetView, null);
+            GameAsset asset = new GameAsset(assetView);
             assetView.setTag(asset); // we tag the view with the asset so we can find the asset when view is clicked.
             assetView.setOnClickListener(this);
-            int y = (random.nextInt(viewportMaxY - 70) + 35);
+            int y = (random.nextInt(viewportMaxY - 370) + 35);
             int x = (random.nextInt(viewportMaxX - 80) + 40);
             mGame.addAsset(asset);
             mGameView.addView(asset.getView(), x, y);
             float speed = getRandomSpeed(random, level);
             float duration = getRandomAnimationDuration(random, level);
-            mGameView.startAnimation(generateAnimator(speed, duration, asset.getView()));
+            asset.setAnimator(generateAnimator(speed, duration, asset.getView()));
+            mGameView.startAnimation(asset.getAnimator());
             int delayDuration = getRandomDelayDuration(random, mGame.getLevel());
             delayMillis(delayDuration);
-
         }
+        Thread.currentThread().interrupt();
     }
 
     private void delayMillis(int delayDuration) {
@@ -155,12 +157,14 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
         double g = random.nextGaussian();
         g *= level / 2;
         g += 10 - Math.min(level * 0.7, 8);
-        return (float) Math.max(2, g);
+        float res =  (float)Math.max(2, g);
+        Log.d(TAG, "life in seconds: "+res);
+        return res;
     }
     private int getRandomDelayDuration(ThreadLocalRandom random, int level) {
         double g = random.nextGaussian();
         int mean = (int) (5000 * Math.pow(0.66667, level ));
-        return Math.max(1, (int)(mean + g*mean));
+        return Math.max(1, (int)(0.5*mean + 0.5*g*mean));
     }
 
     private float getRandomSpeed(ThreadLocalRandom random, int level) {
@@ -173,13 +177,14 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
 
     private Animator generateAnimator(float speed, float duration, @NonNull View v) {
         float final_distance = speed * duration;
+        Objects.requireNonNull(v);
         ObjectAnimator animation;
         Path path = new Path();
         float current_x = v.getX(), current_y = v.getY();
         float target_x, target_y;
         View viewport = mGameView.getViewPort();
         int viewportMaxX = viewport.getMeasuredWidth();
-        int viewportMaxY = viewport.getMeasuredHeight();
+        int viewportMaxY = viewport.getMeasuredHeight()-100;
         ThreadLocalRandom random = ThreadLocalRandom.current();
         float distX = (int) (((random.nextFloat() * 0.8 + 0.1) * 2 - 0.9) * final_distance);
         float distY = (int) Math.sqrt(final_distance * final_distance - distX * distX) * (random.nextInt(2) * 2 - 1);
@@ -202,12 +207,12 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
             target_y = current_y + this_duration * ySpeed;
             if (isCloseTo(target_x, 0.0)) {
                 xSpeed = Math.abs(xSpeed);
-            } else if (isCloseTo(target_x, viewport.getMeasuredWidth())) {
+            } else if (isCloseTo(target_x, viewportMaxX)) {
                 xSpeed = -Math.abs(xSpeed);
             }
             if (isCloseTo(target_y, 0.0)) {
                 ySpeed = Math.abs(ySpeed);
-            } else if (isCloseTo(target_y, viewport.getMeasuredHeight())) {
+            } else if (isCloseTo(target_y, viewportMaxY)) {
                 ySpeed = -Math.abs(ySpeed);
             }
             path.lineTo(target_x, target_y);
@@ -215,6 +220,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
             current_y = target_y;
         }
         animation = ObjectAnimator.ofFloat(v, "x", "y", path);
+
         animation.setDuration((long) duration * 1000);
         animation.setInterpolator(mLinearInterpolator);
         animation.addListener(this);
@@ -276,8 +282,31 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
     public void onAnimationEnd(@NonNull Animator animation) {
         mGameView.playSound(GameActivity.SOUND_MISS);
         View v = (View) ((ObjectAnimator) animation).getTarget();
-        mGameView.removeView(v);
-        mGame.removeAsset((GameAsset) v.getTag());
+        GameAsset asset = (GameAsset) v.getTag();
+        if(asset != null)
+            mGame.removeAsset(asset);
+        if(mGameView.getViewPort().indexOfChild(v) != -1){
+            mGameView.removeView(v);
+            decrementLives();
+        }
+    }
+
+
+    private void decrementLives() {
+        int lives = mGame.getLives();
+        if(lives>0) {
+            mGame.setLives(lives - 1);
+            mGameView.setLives(lives);
+        } else {
+            //finish game
+            gameOver();
+        }
+    }
+
+    private void gameOver() {
+        mThread.stopTask();
+        mGameView.clearViewPort();
+        mGameView.showGameOverScreen();
     }
 
     @Override
