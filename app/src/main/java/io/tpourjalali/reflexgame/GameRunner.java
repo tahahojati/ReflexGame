@@ -109,12 +109,13 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
     public void run() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         View viewport = mGameView.getViewPort();
-        int viewportMaxX = viewport.getHeight();
-        int viewportMaxY = viewport.getWidth();
-        int level = mGame.getLevel();
+        int viewportMaxY = viewport.getHeight();
+        int viewportMaxX = viewport.getWidth();
+        int level = 1;
         Log.d(TAG, "in run method");
         while (mThread.mRunning.get()&&!Thread.interrupted()) //TODO: uncomment this!
         {
+            level = mGame.getLevel();
             Map<String, Object> assetDescription = new ArrayMap<>(3);
             assetDescription.put(KEY_ASSET_TYPE, ASSET_SPOT);
 //            assetDescription.put(KEY_ASSET_COLOR, Color.BLUE);
@@ -124,7 +125,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
             GameAsset asset = new GameAsset(assetView);
             assetView.setTag(asset); // we tag the view with the asset so we can find the asset when view is clicked.
             assetView.setOnClickListener(this);
-            int y = (random.nextInt(viewportMaxY - 370) + 35);
+            int y = (random.nextInt(viewportMaxY - 170) + 35);
             int x = (random.nextInt(viewportMaxX - 80) + 40);
             mGame.addAsset(asset);
             mGameView.addView(asset.getView(), x, y);
@@ -132,6 +133,7 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
             float duration = getRandomAnimationDuration(random, level);
             asset.setAnimator(generateAnimator(speed, duration, asset.getView()));
             mGameView.startAnimation(asset.getAnimator());
+            Log.d(TAG, "added point: "+x+", "+y);
             int delayDuration = getRandomDelayDuration(random, mGame.getLevel());
             delayMillis(delayDuration);
         }
@@ -280,12 +282,14 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
 
     @Override
     public void onAnimationEnd(@NonNull Animator animation) {
-        mGameView.playSound(GameActivity.SOUND_MISS);
         View v = (View) ((ObjectAnimator) animation).getTarget();
+        if(v == null)
+            return;
         GameAsset asset = (GameAsset) v.getTag();
-        if(asset != null)
-            mGame.removeAsset(asset);
+        mGame.removeAsset(asset);
         if(mGameView.getViewPort().indexOfChild(v) != -1){
+            Log.d(TAG, "missed");
+            mGameView.playSound(GameActivity.SOUND_MISS);
             mGameView.removeView(v);
             decrementLives();
         }
@@ -293,9 +297,9 @@ public class GameRunner implements Game.Runner, Runnable, View.OnClickListener, 
 
 
     private void decrementLives() {
-        int lives = mGame.getLives();
-        if(lives>0) {
-            mGame.setLives(lives - 1);
+        int lives = mGame.getLives()-1;
+        if(lives>=0) {
+            mGame.setLives(lives);
             mGameView.setLives(lives);
         } else {
             //finish game

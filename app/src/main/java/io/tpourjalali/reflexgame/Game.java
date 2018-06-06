@@ -99,6 +99,7 @@ public class Game {
 
     public void incrementScore(int i) {
         mScore += i;
+        mLevel = mScore /100 +1;
     }
 
     public void removeAsset(GameAsset asset) {

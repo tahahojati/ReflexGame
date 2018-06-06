@@ -70,7 +70,7 @@ public class GameActivity extends AppCompatActivity implements Game.GameView {
 
         //Done with views
         mPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        mGame = new Game(this, 1);
+        mGame = new Game(this, 5);
         mGameRunner = new GameRunner(this, mGame);
         mGame.setRunner(mGameRunner);
 
