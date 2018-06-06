@@ -8,7 +8,7 @@ This is a simple Android game. The objective of the game is to tap the circle sp
 
 ## Download
 
-This app is not available on Google play (maybe after some enhancements!). For now, you may download the apk and install it on your Android phone via usb.  Alternatively, you can clone the repo and use Android Studio to run the app on your Android phone. 
+This app is not available on Google play (maybe after some enhancements!). For now, you may download [the apk](./readme/app-debug.apk) and install it on your Android phone via usb.  Alternatively, you can clone the repo and use Android Studio to run the app on your Android phone. 
 
 ## Development
 
